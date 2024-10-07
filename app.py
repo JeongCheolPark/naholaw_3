@@ -2,10 +2,11 @@ import streamlit as st
 import os
 import time
 from openai import OpenAI
-from dotenv import load_dotenv
 
-# .env 파일에서 환경 변수 로드
-load_dotenv()
+# 로컬 개발 환경에서만 .env 파일 로드
+if not os.getenv('STREAMLIT_CLOUD'):
+    from dotenv import load_dotenv
+    load_dotenv()
 
 # Streamlit Secrets에서 API 키와 Assistant ID를 가져옵니다.
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
@@ -62,11 +63,12 @@ if 'user_input' not in st.session_state:
 if 'process_message' not in st.session_state:
     st.session_state.process_message = False
 
-# 대화 기록 표시
+# 사이드바에 대화 기록 표시
+st.sidebar.title("대화 쓰레드")
 for i, message in enumerate(st.session_state.conversation):
-    st.text(f"사용자: {message['user']}")
-    st.text(f"AI: {message['ai']}")
-    st.text("---")
+    st.sidebar.write(f"사용자: {message['user']}")
+    st.sidebar.write(f"AI: {message['ai']}")
+    st.sidebar.write("---")
 
 # 메시지 처리 및 AI 응답 생성 함수
 def process_message(user_input):
