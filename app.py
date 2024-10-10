@@ -18,23 +18,7 @@ if "threads" not in st.session_state:
 
 # Streamlit 페이지 설정
 st.set_page_config(page_title="나홀로 AI", page_icon="📝", layout="wide")
-
-# CSS를 사용하여 버튼 스타일 지정 및 사이드바 너비 조정
-st.markdown("""
-<style>
-    .stButton>button {
-        text-align: left;
-        width: 100%;
-    }
-    [data-testid="stSidebar"][aria-expanded="true"] > div:first-child {
-        width: 66.66%;
-    }
-    [data-testid="stSidebar"][aria-expanded="false"] > div:first-child {
-        width: 66.66%;
-        margin-left: -66.66%;
-    }
-</style>
-""", unsafe_allow_html=True)
+st.title("나홀로 AI 📝 (소장 작성 도우미)")
 
 # 쓰레드 제목 생성 함수
 def generate_thread_title(question):
@@ -89,48 +73,7 @@ def load_thread_messages(thread_id):
         content = msg.content[0].text.value if msg.content else ""
         st.session_state.messages.append(ChatMessage(role=role, content=content))
 
-# 쓰레드 생성 함수
-def create_thread(question):
-    thread = client.beta.threads.create()
-    title = generate_thread_title(question)
-    st.session_state.threads.append({"id": thread.id, "title": title})
-    st.session_state.thread_id = thread.id
-    st.session_state.messages = []  # 메시지 초기화
-    return thread
-
-# 스트리밍 응답을 처리하는 함수
-def get_ai_response(thread_id, run_id, timeout=60):
-    start_time = time.time()
-    
-    while True:
-        if time.time() - start_time > timeout:
-            return "응답 생성 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요."
-        
-        run = client.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run_id)
-        if run.status == "completed":
-            messages = client.beta.threads.messages.list(thread_id=thread_id)
-            if messages.data:
-                for content in messages.data[0].content:
-                    if content.type == 'text':
-                        return content.text.value
-            break
-        elif run.status == "failed":
-            return "응답 생성에 실패했습니다. 다시 질문해 주시거나, 잠시 후 재시도해 주세요."
-        
-        time.sleep(1)  # 1초마다 상태 확인
-    
-    return "응답을 받지 못했습니다. 다시 시도해 주세요."
-
-# 쓰레드 메시지 로드 함수
-def load_thread_messages(thread_id):
-    messages = client.beta.threads.messages.list(thread_id=thread_id)
-    st.session_state.messages = []
-    for msg in reversed(messages.data):
-        role = "assistant" if msg.role == "assistant" else "user"
-        content = msg.content[0].text.value if msg.content else ""
-        st.session_state.messages.append(ChatMessage(role=role, content=content))
-
-# CSS를 사용하여 버튼 스타일 지정 (왼쪽 정렬만 적용)
+# CSS를 사용하여 버튼 스타일 지정 (이전 버전으로 되돌림)
 st.markdown("""
 <style>
     .stButton>button {
