@@ -16,6 +16,45 @@ if "messages" not in st.session_state:
 if "threads" not in st.session_state:
     st.session_state.threads = []
 
+# 쓰레드 제목 생성 함수
+def generate_thread_title(question):
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "사용자의 질문을 바탕으로 20자 내외의 간결한 제목 생성"},
+            {"role": "user", "content": question}
+        ],
+        max_tokens=50
+    )
+    return response.choices[0].message.content.strip()
+
+# 쓰레드 생성 함수
+def create_thread(user_input):
+    thread = client.beta.threads.create()
+    title = generate_thread_title(user_input)
+    st.session_state.threads.append({"id": thread.id, "title": title})
+    st.session_state.thread_id = thread.id
+    return thread
+
+# 쓰레드 메시지 로드 함수
+def load_thread_messages(thread_id):
+    messages = client.beta.threads.messages.list(thread_id=thread_id)
+    st.session_state.messages = [
+        ChatMessage(role=msg.role, content=msg.content[0].text.value)
+        for msg in reversed(messages.data)
+    ]
+
+# AI 응답 생성 함수
+def get_ai_response(thread_id, run_id):
+    while True:
+        run = client.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run_id)
+        if run.status == 'completed':
+            messages = client.beta.threads.messages.list(thread_id=thread_id)
+            return messages.data[0].content[0].text.value
+        elif run.status == 'failed':
+            return "죄송합니다. 응답 생성 중 오류가 발생했습니다."
+        time.sleep(1)
+
 # Streamlit 페이지 설정
 st.set_page_config(page_title="나홀로 AI", page_icon="📝", layout="wide")
 
