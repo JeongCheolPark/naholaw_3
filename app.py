@@ -34,11 +34,8 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 두 열로 나누기 (1:6 비율)
-col1, col2 = st.columns([1, 6])  # 1:6 비율로 변경
-
-# 왼쪽 열 (이전 사이드바 내용)
-with col1:
+# 사이드바에 쓰레드 목록 표시
+with st.sidebar:
     st.markdown("### 대화 목록")
     if st.button("새 대화", key="new_chat", type="secondary"):
         st.session_state.thread_id = None
@@ -53,47 +50,46 @@ with col1:
             load_thread_messages(thread["id"])
             st.rerun()
 
-# 오른쪽 열 (메인 콘텐츠)
-with col2:
-    st.title("나홀로 AI 📝 (소장 작성 도우미)")
+# 메인 콘텐츠
+st.title("나홀로 AI 📝 (소장 작성 도우미)")
+
+# 메인 코드 시작
+if st.session_state.thread_id:
+    load_thread_messages(st.session_state.thread_id)
+
+# 이전 대화 출력
+for message in st.session_state.messages:
+    with st.chat_message(message.role):
+        st.markdown(message.content)
+
+# 사용자 입력 처리
+if user_input := st.chat_input("질문을 입력하세요"):
+    st.chat_message("user").write(user_input)
+    st.session_state.messages.append(ChatMessage(role="user", content=user_input))
     
-    # 메인 코드 시작
-    if st.session_state.thread_id:
-        load_thread_messages(st.session_state.thread_id)
+    if st.session_state.thread_id is None:
+        thread = create_thread(user_input)
+    else:
+        thread = client.beta.threads.retrieve(st.session_state.thread_id)
 
-    # 이전 대화 출력
-    for message in st.session_state.messages:
-        with st.chat_message(message.role):
-            st.markdown(message.content)
+    message = client.beta.threads.messages.create(
+        thread_id=st.session_state.thread_id,
+        role="user",
+        content=user_input
+    )
 
-    # 사용자 입력 처리
-    if user_input := st.chat_input("질문을 입력하세요"):
-        st.chat_message("user").write(user_input)
-        st.session_state.messages.append(ChatMessage(role="user", content=user_input))
-        
-        if st.session_state.thread_id is None:
-            thread = create_thread(user_input)
-        else:
-            thread = client.beta.threads.retrieve(st.session_state.thread_id)
+    run = client.beta.threads.runs.create(
+        thread_id=st.session_state.thread_id,
+        assistant_id=assistant_id
+    )
 
-        message = client.beta.threads.messages.create(
-            thread_id=st.session_state.thread_id,
-            role="user",
-            content=user_input
-        )
+    with st.chat_message("assistant"):
+        with st.spinner('AI가 답변을 생성 중입니다...'):
+            msg = get_ai_response(st.session_state.thread_id, run.id)
+        st.write(msg)
+        if msg and msg != user_input:
+            st.session_state.messages.append(ChatMessage(role="assistant", content=msg))
 
-        run = client.beta.threads.runs.create(
-            thread_id=st.session_state.thread_id,
-            assistant_id=assistant_id
-        )
-
-        with st.chat_message("assistant"):
-            with st.spinner('AI가 답변을 생성 중입니다...'):
-                msg = get_ai_response(st.session_state.thread_id, run.id)
-            st.write(msg)
-            if msg and msg != user_input:
-                st.session_state.messages.append(ChatMessage(role="assistant", content=msg))
-
-        st.rerun()
+    st.rerun()
 
 # 나머지 함수들은 그대로 유지
