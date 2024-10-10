@@ -18,6 +18,25 @@ if "threads" not in st.session_state:
 
 # Streamlit 페이지 설정
 st.set_page_config(page_title="나홀로 AI", page_icon="📝", layout="wide")
+
+# CSS를 사용하여 버튼 스타일 지정 및 사이드바 너비 조정
+st.markdown("""
+<style>
+    .stButton>button {
+        text-align: left;
+        width: 100%;
+    }
+    [data-testid="stSidebar"][aria-expanded="true"] > div:first-child {
+        width: 50%;
+    }
+    [data-testid="stSidebar"][aria-expanded="false"] > div:first-child {
+        width: 50%;
+        margin-left: -50%;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# 메인 콘텐츠 영역
 st.title("나홀로 AI 📝 (소장 작성 도우미)")
 
 # 쓰레드 제목 생성 함수
@@ -72,16 +91,6 @@ def load_thread_messages(thread_id):
         role = "assistant" if msg.role == "assistant" else "user"
         content = msg.content[0].text.value if msg.content else ""
         st.session_state.messages.append(ChatMessage(role=role, content=content))
-
-# CSS를 사용하여 버튼 스타일 지정 (이전 버전으로 되돌림)
-st.markdown("""
-<style>
-    .stButton>button {
-        text-align: left;
-        width: 100%;
-    }
-</style>
-""", unsafe_allow_html=True)
 
 # 사이드바에 쓰레드 목록 표시
 with st.sidebar:
