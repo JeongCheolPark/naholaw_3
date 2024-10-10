@@ -2,15 +2,11 @@ import streamlit as st
 import os
 import time
 from openai import OpenAI
-from dotenv import load_dotenv
 from langchain_core.messages import ChatMessage
 
-# .env 파일에서 환경 변수 로드
-load_dotenv()
-
 # OpenAI 클라이언트 초기화
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-assistant_id = os.getenv("ASSISTANT_ID")
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+assistant_id = st.secrets["ASSISTANT_ID"]
 
 # 세션 상태 초기화
 if "thread_id" not in st.session_state:
