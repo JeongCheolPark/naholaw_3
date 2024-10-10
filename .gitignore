@@ -1,1 +1,5 @@
 .env
+__pycache__/
+app_park copy*.py
+__pycache__/
+app_park copy*.py
