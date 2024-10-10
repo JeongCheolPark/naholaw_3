@@ -26,12 +26,17 @@ st.markdown("""
         text-align: left;
         width: 100%;
     }
-    [data-testid="stSidebar"][aria-expanded="true"] > div:first-child {
-        width: 50%;
+    .css-1d391kg {
+        width: 50% !important;
     }
-    [data-testid="stSidebar"][aria-expanded="false"] > div:first-child {
-        width: 50%;
-        margin-left: -50%;
+    .css-1a1fzpi {
+        width: 50% !important;
+    }
+    section[data-testid="stSidebar"] {
+        width: 50% !important;
+    }
+    section[data-testid="stSidebar"] > div {
+        width: 50% !important;
     }
 </style>
 """, unsafe_allow_html=True)
